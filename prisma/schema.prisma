@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model LearningSituation {
+  id             String           @id @default(cuid())
+  gradeId        String
+  subject        String
+  serieName      String?
+  title          String
+  description    String
+  difficulty     Difficulty
+  estimatedHours Float
+  order          Int
+  status         Status           @default(DRAFT)
+  chapters       LearningChapter[]
+  createdAt      DateTime         @default(now())
+}
+
+model LearningChapter {
+  id                  String            @id @default(cuid())
+  learningSituationId String
+  learningSituation   LearningSituation @relation(fields: [learningSituationId], references: [id])
+  title               String
+  description         String
+  order               Int
+  difficulty          Difficulty
+  estimatedHours      Float
+  status              Status            @default(DRAFT)
+  summaries           CourseSummary[]
+  flashcards          Flashcard[]
+  quizzes             Quiz[]
+  createdAt           DateTime          @default(now())
+}
+
+model CourseSummary {
+  id               String          @id @default(cuid())
+  chapterId        String
+  chapter          LearningChapter @relation(fields: [chapterId], references: [id])
+  title            String
+  content          String
+  estimatedMinutes Int
+  status           Status          @default(DRAFT)
+  createdAt        DateTime        @default(now())
+}
+
+model Flashcard {
+  id        String          @id @default(cuid())
+  chapterId String
+  chapter   LearningChapter @relation(fields: [chapterId], references: [id])
+  question  String
+  answer    String
+  order     Int
+  status    Status          @default(DRAFT)
+  createdAt DateTime        @default(now())
+}
+
+model Quiz {
+  id               String          @id @default(cuid())
+  chapterId        String
+  chapter          LearningChapter @relation(fields: [chapterId], references: [id])
+  title            String
+  type             QuizType
+  difficulty       Difficulty
+  feedbackCorrect  String
+  feedbackIncorrect String
+  feedbackPartial  String
+  status           Status          @default(DRAFT)
+  questions        QuizQuestion[]
+  createdAt        DateTime        @default(now())
+}
+
+model QuizQuestion {
+  id                 String   @id @default(cuid())
+  quizId             String
+  quiz               Quiz     @relation(fields: [quizId], references: [id])
+  question           String
+  options            String[]
+  correctOptionIndex Int?
+  correctAnswer      Boolean?
+  leftItems          String[]
+  rightItems         String[]
+  expectedAnswer     String?
+  createdAt          DateTime @default(now())
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+}
+
+enum QuizType {
+  MCQ
+  TRUE_FALSE
+  MATCHING
+  OPEN_ANSWER
+}
